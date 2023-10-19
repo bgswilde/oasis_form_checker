@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "75910888144",
+    "project_id": "oasis-form-checker",
+    "storage_bucket": "oasis-form-checker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:75910888144:android:b51baa6d13d73fa0933cd5",
+        "android_client_info": {
+          "package_name": "com.example.oasis_forms_checker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "75910888144-buv9g9dp9i29mtlkdj7cuhoqpnuig57f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnfg5_D_W5hVexaPYWX7KW9PhYEp-ZZHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "75910888144-buv9g9dp9i29mtlkdj7cuhoqpnuig57f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "75910888144-jlqeao3o5dqpa3prm5tf6nlck961cg64.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.oasisFormsChecker"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
