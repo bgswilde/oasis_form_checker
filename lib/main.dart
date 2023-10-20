@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterfire_ui/auth.dart';
@@ -8,22 +9,125 @@ import 'package:oasis_forms_checker/screens/code_screen.dart';
 class AuthGate extends StatelessWidget {
   const AuthGate({Key? key}) : super(key: key);
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return StreamBuilder<User?>(
+  //     stream: FirebaseAuth.instance.authStateChanges(),
+  //     builder: (context, snapshot) {
+  //       final user = snapshot.data;
+  //       // User is not signed in
+  //       if (user == null) {
+  //         return SignInScreen(
+  //           headerBuilder: (context, constraints, _) {
+  //             return Padding(
+  //               padding: const EdgeInsets.all(20),
+  //               child: AspectRatio(
+  //                 aspectRatio: 1,
+  //                 child: Image.network(
+  //                     'https://firebase.flutter.dev/img/flutterfire_300x.png'),
+  //               ),
+  //             );
+  //           },
+  //           providerConfigs: const [
+  //             EmailProviderConfiguration(),
+  //             // for later, use google
+  //             GoogleProviderConfiguration(
+  //                 clientId:
+  //                     '...')
+  //           ],
+  //         );
+  //       } else {
+  //         // when a user is signed in, see if they exist in users collection, add if not add
+  //         // then redirect to home page for verifcation or data querying
+  //         _checkAndCreateUserRecord(user);
+  //         checkVerificationAndRedirect(user.uid);
+  //       }
+  //     },
+  //   );
+  // }
+
+  Future<Widget> checkVerificationAndRedirect(String uid) async {
+    DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+    if (userDoc.exists) {
+      final data = userDoc.data() as Map<String, dynamic>;
+      if (data.containsKey('isVerified')) {
+        return MyHomePage(
+            title: 'Verified returned', verified: data['isVerified']);
+      } else {
+        // Handle the case where 'isVerified' field is missing.
+        return const MyHomePage(
+            title: 'Not Verified yet, no field', verified: false);
+      }
+    } else {
+      // Handle the case where the user document doesn't exist.
+      return const MyHomePage(
+          title: 'Not Verified Yet, no user', verified: false);
+    }
+  }
+
+  void _checkAndCreateUserRecord(User user) async {
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    final userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      // User doesn't exist in Firestore; create a user record
+      try {
+        await userRef.set({
+          'uid': user.uid,
+          'email': user.email,
+          'isVerified': false,
+        });
+      } catch (e) {
+        print(e);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        final user = snapshot.data;
         // User is not signed in
-        if(!snapshot.hasData) {
-          return const SignInScreen(
-            providerConfigs: [
+        if (user == null) {
+          return SignInScreen(
+            headerBuilder: (context, constraints, _) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Image.network(
+                      'https://firebase.flutter.dev/img/flutterfire_300x.png'),
+                ),
+              );
+            },
+            providerConfigs: const [
               EmailProviderConfiguration(),
               // for later, use google
-              GoogleProviderConfiguration(clientId: '75910888144-buv9g9dp9i29mtlkdj7cuhoqpnuig57f.apps.googleusercontent.com')
+              GoogleProviderConfiguration(
+                  clientId:
+                      '...')
             ],
           );
+        } else {
+          _checkAndCreateUserRecord(user);
+          return FutureBuilder<Widget>(
+            future: checkVerificationAndRedirect(user.uid),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return snapshot.data ??
+                    const MyHomePage(title: 'Fallback', verified: false);
+              } else {
+                return const CircularProgressIndicator();
+              }
+            },
+          );
         }
-        return const MyHomePage(title: 'Here we go!', verified: false);
       },
     );
   }
@@ -61,7 +165,8 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 53, 92)),
+        colorScheme:
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 53, 92)),
         useMaterial3: true,
       ),
       home: const AuthGate(),
@@ -102,6 +207,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _counter++;
     });
   }
+
   void _addRandomName() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -113,6 +219,7 @@ class _MyHomePageState extends State<MyHomePage> {
       people.add('this person $_counter');
     });
   }
+
   void _authenticated() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -134,57 +241,58 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     if (widget.verified) {
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Here they:',
-            ),
-            Column(
-              children: people.map((String item) {
-                return Text(item);
-              }).toList(),
-            ),
-            // Text(
-            //   '$_counter',
-            //   style: Theme.of(context).textTheme.headlineMedium,
-            // ),
-          ],
+      return Scaffold(
+        appBar: AppBar(
+          // TRY THIS: Try changing the color here to a specific color (to
+          // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+          // change color while the other colors stay the same.
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addRandomName,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  } else {
-    return const CodePage();
-  }}
+        body: Center(
+          // Center is a layout widget. It takes a single child and positions it
+          // in the middle of the parent.
+          child: Column(
+            // Column is also a layout widget. It takes a list of children and
+            // arranges them vertically. By default, it sizes itself to fit its
+            // children horizontally, and tries to be as tall as its parent.
+            //
+            // Column has various properties to control how it sizes itself and
+            // how it positions its children. Here we use mainAxisAlignment to
+            // center the children vertically; the main axis here is the vertical
+            // axis because Columns are vertical (the cross axis would be
+            // horizontal).
+            //
+            // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
+            // action in the IDE, or press "p" in the console), to see the
+            // wireframe for each widget.
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text(
+                'Here they:',
+              ),
+              Column(
+                children: people.map((String item) {
+                  return Text(item);
+                }).toList(),
+              ),
+              // Text(
+              //   '$_counter',
+              //   style: Theme.of(context).textTheme.headlineMedium,
+              // ),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _addRandomName,
+          tooltip: 'Increment',
+          child: const Icon(Icons.add),
+        ), // This trailing comma makes auto-formatting nicer for build methods.
+      );
+    } else {
+      return const CodePage();
+    }
+  }
 }
