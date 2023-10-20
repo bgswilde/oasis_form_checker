@@ -1,7 +1,32 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterfire_ui/auth.dart';
 import 'package:oasis_forms_checker/firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+class AuthGate extends StatelessWidget {
+  const AuthGate({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // User is not signed in
+        if(!snapshot.hasData) {
+          return const SignInScreen(
+            providerConfigs: [
+              EmailProviderConfiguration(),
+              // for later, use google
+              GoogleProviderConfiguration(clientId: '75910888144-buv9g9dp9i29mtlkdj7cuhoqpnuig57f.apps.googleusercontent.com')
+            ],
+          );
+        }
+        return const MyHomePage(title: 'You made it!');
+      },
+    );
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,10 +60,10 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 0, 0)),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 53, 92)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const AuthGate(),
     );
   }
 }
