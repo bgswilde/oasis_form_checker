@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutterfire_ui/auth.dart';
 import 'package:oasis_forms_checker/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:oasis_forms_checker/screens/code_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({Key? key}) : super(key: key);
@@ -22,7 +23,7 @@ class AuthGate extends StatelessWidget {
             ],
           );
         }
-        return const MyHomePage(title: 'You made it!');
+        return const MyHomePage(title: 'Here we go!', verified: false);
       },
     );
   }
@@ -69,7 +70,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.verified});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -81,7 +82,7 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
-
+  final bool verified;
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -132,6 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    if (widget.verified) {
     return Scaffold(
       appBar: AppBar(
         // TRY THIS: Try changing the color here to a specific color (to
@@ -182,5 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-  }
+  } else {
+    return const CodePage();
+  }}
 }
