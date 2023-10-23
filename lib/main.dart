@@ -11,43 +11,6 @@ import 'package:oasis_forms_checker/screens/search_screen.dart';
 class AuthGate extends StatelessWidget {
   const AuthGate({Key? key}) : super(key: key);
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   return StreamBuilder<User?>(
-  //     stream: FirebaseAuth.instance.authStateChanges(),
-  //     builder: (context, snapshot) {
-  //       final user = snapshot.data;
-  //       // User is not signed in
-  //       if (user == null) {
-  //         return SignInScreen(
-  //           headerBuilder: (context, constraints, _) {
-  //             return Padding(
-  //               padding: const EdgeInsets.all(20),
-  //               child: AspectRatio(
-  //                 aspectRatio: 1,
-  //                 child: Image.network(
-  //                     'https://firebase.flutter.dev/img/flutterfire_300x.png'),
-  //               ),
-  //             );
-  //           },
-  //           providerConfigs: const [
-  //             EmailProviderConfiguration(),
-  //             // for later, use google
-  //             GoogleProviderConfiguration(
-  //                 clientId:
-  //                     '...')
-  //           ],
-  //         );
-  //       } else {
-  //         // when a user is signed in, see if they exist in users collection, add if not add
-  //         // then redirect to home page for verifcation or data querying
-  //         _checkAndCreateUserRecord(user);
-  //         checkVerificationAndRedirect(user.uid);
-  //       }
-  //     },
-  //   );
-  // }
-
   Future<Widget> checkVerificationAndRedirect(String uid) async {
     DocumentSnapshot userDoc =
         await FirebaseFirestore.instance.collection('users').doc(uid).get();
@@ -94,27 +57,44 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        String? client = dotenv.env['GOOGLE_CLIENT'];
         final user = snapshot.data;
         // User is not signed in
         if (user == null) {
+          List<ProviderConfiguration> providerConfigs = [EmailProviderConfiguration()];
+          if (client != null) {
+            providerConfigs.add(GoogleProviderConfiguration(clientId: client));
+          }
           return SignInScreen(
+            subtitleBuilder: (context, action) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  action == AuthAction.signIn
+                      ? 'To check Oasis student form submissions, sign in or register if this is your first time at this page.'
+                      : 'Please register for an account to continue to check your student form submissions',
+                ),
+              );
+            },
+            sideBuilder: (context, constraints) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Image.asset('assets/oasisOL.png', width: 250, height: 250, fit: BoxFit.contain,),
+                ),
+              );
+            },
             headerBuilder: (context, constraints, _) {
               return Padding(
                 padding: const EdgeInsets.all(20),
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: Image.network(
-                      'https://firebase.flutter.dev/img/flutterfire_300x.png'),
+                  child: Image.asset('assets/oasisL.png', width: 250, fit: BoxFit.contain,),
                 ),
               );
             },
-            providerConfigs: const [
-              EmailProviderConfiguration(),
-              // for later, use google
-              GoogleProviderConfiguration(
-                  clientId:
-                      '75910888144-buv9g9dp9i29mtlkdj7cuhoqpnuig57f.apps.googleusercontent.com')
-            ],
+            providerConfigs: providerConfigs,
           );
         } else {
           _checkAndCreateUserRecord(user);
@@ -125,7 +105,10 @@ class AuthGate extends StatelessWidget {
                 return snapshot.data ??
                     const MyHomePage(title: 'Fallback', verified: false);
               } else {
-                return const LoadingIndicator(size: 300.0, borderWidth: 5.0, color: Color.fromARGB(255, 114, 82, 255));
+                return const LoadingIndicator(
+                    size: 100.0,
+                    borderWidth: 5.0,
+                    color: Color.fromARGB(255, 114, 82, 255));
               }
             },
           );
@@ -138,8 +121,6 @@ class AuthGate extends StatelessWidget {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print('got here');
-  // print(dotenv);
   await dotenv.load();
   runApp(const MyApp());
 }
@@ -170,7 +151,7 @@ class MyApp extends StatelessWidget {
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
         colorScheme:
-            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 53, 92)),
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 33, 40, 45)),
         useMaterial3: true,
       ),
       home: const AuthGate(),

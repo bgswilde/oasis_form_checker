@@ -66,144 +66,65 @@ class SearchPageState extends State<SearchPage> {
     final client = await clientViaServiceAccount(
         credentials, [sheets.SheetsApi.spreadsheetsReadonlyScope]);
     final sheetsApi = sheets.SheetsApi(client);
-    const sheet = '1OoT6ET5_zLoKslwpEWLDATWXs5DbGgC4zGf62EjHm9M';
-    const range = 'Form Responses 2023!B:D';
+    final sheet = dotenv.env['GOOGLE_SHEET'];
+    final range = dotenv.env['RANGE'];
     // list variable to handle null exceptions error
     List<List<Object?>?>? responseValues;
     // list to hold returned and filtered students
     final List<String> studentList = [];
 
     // Google Sheets Api call
-    try {
-      final response = await sheetsApi.spreadsheets.values.get(sheet, range);
-      print('got that response ');
-      responseValues = response.values;
+    if (sheet != null && range != null) {
+      try {
+        final response = await sheetsApi.spreadsheets.values.get(sheet, range);
+        responseValues = response.values;
 
-      if (responseValues != null && responseValues.isNotEmpty) {
-        // successfully returned array contains objects with {FirstName, LastName, YouthLeader}
-        for (var row in responseValues) {
-          if (row != null && row.length >= 3) {
-            final columnBValue = row[0];
-            final columnCValue = row[1];
-            final columnJValue = row[2];
+        if (responseValues != null && responseValues.isNotEmpty) {
+          // successfully returned array contains objects with {FirstName, LastName, YouthLeader}
+          for (var row in responseValues) {
+            if (row != null && row.length >= 3) {
+              final firstNameValue = row[0];
+              final lastNameValue = row[1];
+              final leaderNameValue = row[2];
 
-            if (columnJValue == leader) {
-              studentList.add('$columnCValue, $columnBValue');
+              if (leaderNameValue.toString().toLowerCase() == leader.toLowerCase()) {
+                studentList.add('$lastNameValue, $firstNameValue');
+              }
             }
           }
-        }
-        if (studentList.isEmpty) {
+          if (studentList.isEmpty) {
+            displayError(
+                "0 form submissions found. Double check leader name entry to be sure this is correct!");
+          }
+        } else {
           displayError(
               "0 form submissions found. Double check leader name entry to be sure this is correct!");
         }
-      } else {
-        print('No data found in the specified range.');
+      } catch (e) {
         displayError(
-            "0 form submissions found. Double check leader name entry to be sure this is correct!");
+            'Ope, something went wrong on our end. Try again, or reach out if this continues!');
       }
-    } catch (e) {
-      print('error: $e');
-      displayError(
-          'Ope, something went wrong on our end. Try again, or reach out if this continues!');
+    } else {
+      displayError('Something is wrong on our end. Reach out to us and let us know, please!');
     }
 
     studentList.sort();
-    print(studentList);
     toggleLoading();
     setStudents(studentList);
   }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     appBar: AppBar(title: const Text('Code Verification')),
-  //     body: Center(
-  //       child: Container(
-  //         width: double
-  //             .infinity, // Expand the container to the maximum available width
-  //         child: Column(
-  //           mainAxisAlignment: MainAxisAlignment.center,
-  //           crossAxisAlignment: CrossAxisAlignment.center,
-  //           children: <Widget>[
-  //             Container(
-  //               constraints: const BoxConstraints(
-  //                   maxWidth: 800), // Set a maximum width for the Card
-  //               child: Card(
-  //                 margin: const EdgeInsets.symmetric(horizontal: 20.0),
-  //                 child: Padding(
-  //                   padding: const EdgeInsets.all(20.0),
-  //                   child: Column(
-  //                     children: <Widget>[
-  //                       const Text(
-  //                           'Enter youth leader name (as would appear in form) to check students who have filled out the form',
-  //                           style: TextStyle(
-  //                               fontSize: 16, fontWeight: FontWeight.w400)),
-  //                       TextFormField(
-  //                         controller: searchController,
-  //                         decoration: const InputDecoration(
-  //                             hintText: 'Youth Leader Name',
-  //                             helperText: 'ex: Thurgood Pastorname'),
-  //                       ),
-  //                       Visibility(
-  //                         visible: error,
-  //                         child: Text(errorMessage,
-  //                             style: const TextStyle(
-  //                                 color: Color.fromARGB(255, 114, 82, 255))),
-  //                       ),
-  //                       ElevatedButton(
-  //                         onPressed: () {
-  //                           if (searchController.text.length > 1) {
-  //                             String name = searchController.text;
-  //                             print('Search submitted with $name');
-  //                             getGoogleSheetData(searchController.text);
-  //                           } else {
-  //                             print('Nope');
-  //                             displayError(
-  //                                 'Something is wrong with your input, try again');
-  //                           }
-  //                         },
-  //                         child: const Text('Submit'),
-  //                       ),
-  //                       Visibility(
-  //                         visible: loading,
-  //                         child: const LoadingIndicator(
-  //                           size: 20.0,
-  //                           borderWidth: 2.0,
-  //                           color: Color.fromARGB(255, 114, 82, 255),
-  //                         ),
-  //                       ),
-  //                       Visibility(
-  //                         visible: studentsToShow.isNotEmpty,
-  //                         child: SingleChildScrollView(
-  //                           child: Column(
-  //                             children: studentsToShow.map((String student) {
-  //                               return ListTile(title: Text(student));
-  //                             }).toList(),
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(iconTheme: IconThemeData()),
+      appBar: AppBar(
+        title: Image.asset('assets/oasisL.png', height: 100),
+        centerTitle: true,
+      ),
       body: Center(
-        child: Container(
+        child: SizedBox(
           width: double.infinity,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Container(
                 constraints: const BoxConstraints(maxWidth: 800),
@@ -212,9 +133,9 @@ class SearchPageState extends State<SearchPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
-                    children: <Widget>[
+                      children: <Widget>[
                         const Text(
-                          'Enter youth leader name (as would appear in form) to check students who have filled out the form',
+                          'Enter youth leader name (as it appears in the form) to check students who have filled out the form',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w400,
@@ -224,7 +145,7 @@ class SearchPageState extends State<SearchPage> {
                           controller: searchController,
                           decoration: const InputDecoration(
                             hintText: 'Youth Leader Name',
-                            helperText: 'ex: Thurgood Pastorname',
+                            helperText: 'e.g., Thurgood Pastorname',
                           ),
                         ),
                         Visibility(
@@ -232,7 +153,7 @@ class SearchPageState extends State<SearchPage> {
                           child: Text(
                             errorMessage,
                             style: const TextStyle(
-                              color: Color.fromARGB(255, 114, 82, 255),
+                              color: Color(0xFF7252FF),
                             ),
                           ),
                         ),
@@ -240,10 +161,9 @@ class SearchPageState extends State<SearchPage> {
                           onPressed: () {
                             if (searchController.text.length > 1) {
                               String name = searchController.text;
-                              print('Search submitted with $name');
-                              getGoogleSheetData(searchController.text);
+                              getGoogleSheetData(name);
                             } else {
-                              print('Nope');
+                              clearStudents();
                               displayError(
                                   'Something is wrong with your input, try again');
                             }
@@ -255,7 +175,7 @@ class SearchPageState extends State<SearchPage> {
                           child: const LoadingIndicator(
                             size: 20.0,
                             borderWidth: 2.0,
-                            color: Color.fromARGB(255, 114, 82, 255),
+                            color: Color(0xFF7252FF),
                           ),
                         ),
                       ],
@@ -263,22 +183,29 @@ class SearchPageState extends State<SearchPage> {
                   ),
                 ),
               ),
-              Visibility(
-                visible: studentsToShow.isNotEmpty,
-                child: Expanded(
-                  child: Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-                    child: Padding(
-                      padding:
-                          const EdgeInsets.all(8.0), // Adjust padding as needed
+              if (studentsToShow.isNotEmpty)
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 800, maxWidth: 800),
+                  child: Expanded(
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 20.0),
                       child: CustomScrollView(
                         slivers: <Widget>[
-                          SliverAppBar(title: Text('Yay! You have ${studentsToShow.length} students with completed forms!'), pinned: true,),
+                          SliverAppBar(
+                            title: Text(
+                              'Yay! You have ${studentsToShow.length} students with completed forms!',
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                            pinned: true,
+                          ),
                           SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (BuildContext context, int index) {
                                 return ListTile(
-                                    title: Text(studentsToShow[index]));
+                                  title: SelectableText(studentsToShow[index]),
+                                );
                               },
                               childCount: studentsToShow.length,
                             ),
@@ -288,7 +215,6 @@ class SearchPageState extends State<SearchPage> {
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
