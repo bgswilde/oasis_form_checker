@@ -13,7 +13,7 @@ class CodePage extends StatefulWidget {
 
 class CodePageState extends State<CodePage> {
   final TextEditingController codeController = TextEditingController();
-  final user = FirebaseAuth.instance.currentUser;
+  final user = FirebaseAuth.instance.currentUser!;
   bool error = false;
   void displayError() {
     setState(() {
@@ -39,9 +39,19 @@ class CodePageState extends State<CodePage> {
       setState(() {
         code = fetchedCode;
       });
-            print('we have a code! $code');
+      print('we have a code! $code');
     } else {
       print('i dont think so');
+    }
+  }
+
+  Future<void> _updateUserVerification() async {
+    final ref = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    try {
+      await ref.update({'isVerified': true});
+      print('updated to verified');
+    } catch (e) {
+      print('something went wrong in update $e');
     }
   }
 
@@ -50,45 +60,65 @@ class CodePageState extends State<CodePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Code Verification')),
       body: Center(
-        child: Column(
-          children: <Widget>[
-            Card(
-              child: Column(children: <Widget>[
-                const Text('Enter security phrase to continue',
-                    style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-                TextFormField(
-                  controller: codeController,
-                  decoration: const InputDecoration(
-                      hintText: 'security phrase',
-                      helperText:
-                          'note: you should have recieved this from oasis, reach out if not.'),
+        child: Container(
+          width: double
+              .infinity, // Expand the container to the maximum available width
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                constraints: const BoxConstraints(
+                    maxWidth: 800), // Set a maximum width for the Card
+                child: Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: <Widget>[
+                        const Text('Enter security phrase to continue',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w600)),
+                        TextFormField(
+                          controller: codeController,
+                          decoration: const InputDecoration(
+                              hintText: 'Security phrase',
+                              helperText:
+                                  'Note: Reach out if you did not recieve from Oasis.'),
+                        ),
+                        Visibility(
+                          visible: error,
+                          child: const Text('Incorrect Phrase',
+                              style: TextStyle(color: Colors.redAccent)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (codeController.text == code) {
+                              print('Yep, that matched');
+                              _updateUserVerification();
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const MyHomePage(
+                                          title: 'Yay, I did it!',
+                                          verified: true)));
+                            } else {
+                              print('Nope');
+                              displayError();
+                            }
+                          },
+                          child: const Text('Submit'),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                Visibility(
-                  visible: error,
-                  child: const Text('Incorrect Phrase',
-                      style: TextStyle(color: Colors.redAccent)),
-                ),
-                ElevatedButton(
-                    onPressed: () {
-                      if (codeController.text == code) {
-                        print('yep, that matched');
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const MyHomePage(title: 'Yay, I did it!', verified: true)));
-                      } else {
-                        print('nope');
-                        displayError();
-                      }
-                    },
-                    child: const Text('Submit')),
-              ]),
-            )
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 }
