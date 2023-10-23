@@ -125,7 +125,7 @@ class AuthGate extends StatelessWidget {
                 return snapshot.data ??
                     const MyHomePage(title: 'Fallback', verified: false);
               } else {
-                return const CircularProgressIndicator();
+                return const LoadingIndicator(size: 300.0, borderWidth: 5.0, color: Color.fromARGB(255, 114, 82, 255));
               }
             },
           );
