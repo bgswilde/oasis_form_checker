@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:flutterfire_ui/firestore.dart';
 import 'package:oasis_forms_checker/main.dart';
 
 class CodePage extends StatefulWidget {
@@ -39,9 +38,8 @@ class CodePageState extends State<CodePage> {
       setState(() {
         code = fetchedCode;
       });
-      print('we have a code! $code');
     } else {
-      print('i dont think so');
+      print('no code');
     }
   }
 
@@ -49,61 +47,69 @@ class CodePageState extends State<CodePage> {
     final ref = FirebaseFirestore.instance.collection('users').doc(user.uid);
     try {
       await ref.update({'isVerified': true});
-      print('updated to verified');
     } catch (e) {
-      print('something went wrong in update $e');
+      print(e);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Code Verification')),
+      appBar: AppBar(
+        title: Image.asset('assets/oasisL.png', height: 100),
+        centerTitle: true,
+      ),
       body: Center(
-        child: Container(
-          width: double
-              .infinity, // Expand the container to the maximum available width
+        child: SizedBox(
+          width: double.infinity,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Container(
-                constraints: const BoxConstraints(
-                    maxWidth: 800), // Set a maximum width for the Card
+                constraints: const BoxConstraints(maxWidth: 400),
                 child: Card(
                   margin: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
                       children: <Widget>[
-                        const Text('Enter security phrase to continue',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w600)),
+                        const Text(
+                          'Enter security phrase to continue',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 20),
                         TextFormField(
                           controller: codeController,
                           decoration: const InputDecoration(
-                              hintText: 'Security phrase',
-                              helperText:
-                                  'Note: Reach out if you did not recieve from Oasis.'),
+                            hintText: 'Security phrase',
+                            helperText:
+                                'Note: Reach out if you did not receive it from Oasis.',
+                          ),
                         ),
+                        const SizedBox(height: 20),
                         Visibility(
                           visible: error,
-                          child: const Text('Incorrect Phrase',
-                              style: TextStyle(color: Colors.redAccent)),
+                          child: const Text(
+                            'Incorrect Phrase',
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
                         ),
+                        const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () {
                             if (codeController.text == code) {
-                              print('Yep, that matched');
                               _updateUserVerification();
                               Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const MyHomePage(
-                                          title: 'Yay, I did it!',
-                                          verified: true)));
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MyHomePage(
+                                    title: 'Yay, I did it!',
+                                    verified: true,
+                                  ),
+                                ),
+                              );
                             } else {
-                              print('Nope');
                               displayError();
                             }
                           },
@@ -120,5 +126,4 @@ class CodePageState extends State<CodePage> {
       ),
     );
   }
-
 }
