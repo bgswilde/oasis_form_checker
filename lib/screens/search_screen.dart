@@ -198,46 +198,47 @@ class SearchPageState extends State<SearchPage> {
                     margin: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 20.0),
                     child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          const SizedBox(
-                            height: 12,
-                          ),
-                          Text(
-                            'Yay! You have ${studentsToShow.length} students with completed forms!',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                      child: Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              'Yay! You have ${studentsToShow.length} students with completed forms!',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          const SizedBox(
-                            height: 12,
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              // Copy the list of studentsToShow to the clipboard
-                              final textToCopy = studentsToShow.join('\n');
-                              Clipboard.setData(
-                                  ClipboardData(text: textToCopy));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('List copied to clipboard')),
-                              );
-                            },
-                            child: const Text('Copy List'),
-                          ), // Add a divider for separation
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics:
-                                const ClampingScrollPhysics(), // To disable scrolling in the list
-                            itemCount: studentsToShow.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return ListTile(
-                                title: Text(studentsToShow[index]),
-                              );
-                            },
-                          ),
-                        ],
+                            const SizedBox(
+                              height: 12,
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                // Copy the list of studentsToShow to the clipboard
+                                final textToCopy = studentsToShow.join('\n');
+                                Clipboard.setData(
+                                    ClipboardData(text: textToCopy));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('List copied to clipboard')),
+                                );
+                              },
+                              child: const Text('Copy List'),
+                            ), // Add a divider for separation
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics:
+                                  const ClampingScrollPhysics(), // To disable scrolling in the list
+                              itemCount: studentsToShow.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return ListTile(
+                                  title: Text(studentsToShow[index]),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
