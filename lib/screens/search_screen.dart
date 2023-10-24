@@ -5,6 +5,9 @@ import 'package:flutterfire_ui/auth.dart';
 import 'package:googleapis/sheets/v4.dart' as sheets;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:googleapis_auth/googleapis_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:oasis_forms_checker/services/cloud_func_getters.dart';
+
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -16,11 +19,11 @@ class SearchPage extends StatefulWidget {
 class SearchPageState extends State<SearchPage> {
   final TextEditingController searchController = TextEditingController();
   final user = FirebaseAuth.instance.currentUser!;
-  final String? jsonKey = dotenv.env['JSONKEY'];
   List<String> studentsToShow = [];
   bool error = false;
   String errorMessage = '';
   bool loading = false;
+
   void displayError(String message) {
     setState(() {
       errorMessage = message;
@@ -55,26 +58,33 @@ class SearchPageState extends State<SearchPage> {
     });
   }
 
+
+
+
   Future<void> getGoogleSheetData(String leader) async {
     // reset state
     clearError();
     clearStudents();
     toggleLoading();
 
+    // Firebase Functions for env variables
+    final jsonKey = await getCloudFunctionValue('getJsonKeyE', 'jsonKey');
+    final sheet = await getCloudFunctionValue('getGoogleSheetE', 'gSheet');
+    final String range = await getCloudFunctionValue('getRangeRequestE', 'range');
+    
     // google sheets api requirements
     final credentials = ServiceAccountCredentials.fromJson(jsonKey);
     final client = await clientViaServiceAccount(
         credentials, [sheets.SheetsApi.spreadsheetsReadonlyScope]);
     final sheetsApi = sheets.SheetsApi(client);
-    final sheet = dotenv.env['GOOGLE_SHEET'];
-    final range = dotenv.env['RANGE'];
+    // final sheet = dotenv.env['GOOGLE_SHEET']; // replace this with cloud function getGoogleSheet
+    // final range = dotenv.env['RANGE']; // replace this with cloud function getRange
     // list variable to handle null exceptions error
     List<List<Object?>?>? responseValues;
     // list to hold returned and filtered students
     final List<String> studentList = [];
 
     // Google Sheets Api call
-    if (sheet != null && range != null) {
       try {
         final response = await sheetsApi.spreadsheets.values.get(sheet, range);
         responseValues = response.values;
@@ -104,9 +114,6 @@ class SearchPageState extends State<SearchPage> {
         displayError(
             'Ope, something went wrong on our end. Try again, or reach out if this continues!');
       }
-    } else {
-      displayError('Something is wrong on our end. Reach out to us and let us know, please!');
-    }
 
     studentList.sort();
     toggleLoading();

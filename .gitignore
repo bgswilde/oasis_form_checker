@@ -44,3 +44,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase Functions configuration
+functions/.runtimeconfig.json
+functions/.env
+
+# Firebase Functions build artifacts
+functions/lib/
+functions/node_modules/
+functions/npm-debug.log
