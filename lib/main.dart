@@ -22,7 +22,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
-    getCloudFunctionValue('getGoogleClient', 'gClient').then((value) {
+    getCloudFunctionValue('getGoogleClientE', 'gClient').then((value) {
       setState(() {
         client = value;
       });
