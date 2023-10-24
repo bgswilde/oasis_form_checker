@@ -1,13 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
 import 'package:flutterfire_ui/auth.dart';
 import 'package:googleapis/sheets/v4.dart' as sheets;
 import 'package:googleapis_auth/auth_io.dart';
-import 'package:googleapis_auth/googleapis_auth.dart';
-import 'package:http/http.dart' as http;
 import 'package:oasis_forms_checker/services/cloud_func_getters.dart';
-
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -58,9 +55,6 @@ class SearchPageState extends State<SearchPage> {
     });
   }
 
-
-
-
   Future<void> getGoogleSheetData(String leader) async {
     // reset state
     clearError();
@@ -70,50 +64,50 @@ class SearchPageState extends State<SearchPage> {
     // Firebase Functions for env variables
     final jsonKey = await getCloudFunctionValue('getJsonKeyE', 'jsonKey');
     final sheet = await getCloudFunctionValue('getGoogleSheetE', 'gSheet');
-    final String range = await getCloudFunctionValue('getRangeRequestE', 'range');
-    
+    final String range =
+        await getCloudFunctionValue('getRangeRequestE', 'range');
+
     // google sheets api requirements
     final credentials = ServiceAccountCredentials.fromJson(jsonKey);
     final client = await clientViaServiceAccount(
         credentials, [sheets.SheetsApi.spreadsheetsReadonlyScope]);
     final sheetsApi = sheets.SheetsApi(client);
-    // final sheet = dotenv.env['GOOGLE_SHEET']; // replace this with cloud function getGoogleSheet
-    // final range = dotenv.env['RANGE']; // replace this with cloud function getRange
-    // list variable to handle null exceptions error
+
     List<List<Object?>?>? responseValues;
     // list to hold returned and filtered students
     final List<String> studentList = [];
 
     // Google Sheets Api call
-      try {
-        final response = await sheetsApi.spreadsheets.values.get(sheet, range);
-        responseValues = response.values;
+    try {
+      final response = await sheetsApi.spreadsheets.values.get(sheet, range);
+      responseValues = response.values;
 
-        if (responseValues != null && responseValues.isNotEmpty) {
-          // successfully returned array contains objects with {FirstName, LastName, YouthLeader}
-          for (var row in responseValues) {
-            if (row != null && row.length >= 3) {
-              final firstNameValue = row[0];
-              final lastNameValue = row[1];
-              final leaderNameValue = row[2];
+      if (responseValues != null && responseValues.isNotEmpty) {
+        // successfully returned array contains objects with {FirstName, LastName, YouthLeader}
+        for (var row in responseValues) {
+          if (row != null && row.length >= 3) {
+            final firstNameValue = row[0];
+            final lastNameValue = row[1];
+            final leaderNameValue = row[2];
 
-              if (leaderNameValue.toString().toLowerCase() == leader.toLowerCase()) {
-                studentList.add('$lastNameValue, $firstNameValue');
-              }
+            if (leaderNameValue.toString().toLowerCase() ==
+                leader.toLowerCase()) {
+              studentList.add('$lastNameValue, $firstNameValue');
             }
           }
-          if (studentList.isEmpty) {
-            displayError(
-                "0 form submissions found. Double check leader name entry to be sure this is correct!");
-          }
-        } else {
+        }
+        if (studentList.isEmpty) {
           displayError(
               "0 form submissions found. Double check leader name entry to be sure this is correct!");
         }
-      } catch (e) {
+      } else {
         displayError(
-            'Ope, something went wrong on our end. Try again, or reach out if this continues!');
+            "0 form submissions found. Double check leader name entry to be sure this is correct!");
       }
+    } catch (e) {
+      displayError(
+          'Ope, something went wrong on our end. Try again, or reach out if this continues!');
+    }
 
     studentList.sort();
     toggleLoading();
@@ -164,6 +158,9 @@ class SearchPageState extends State<SearchPage> {
                             ),
                           ),
                         ),
+                        const SizedBox(
+                          height: 12,
+                        ),
                         ElevatedButton(
                           onPressed: () {
                             if (searchController.text.length > 1) {
@@ -176,6 +173,9 @@ class SearchPageState extends State<SearchPage> {
                             }
                           },
                           child: const Text('Submit'),
+                        ),
+                        const SizedBox(
+                          height: 12,
                         ),
                         Visibility(
                           visible: loading,
@@ -191,31 +191,51 @@ class SearchPageState extends State<SearchPage> {
                 ),
               ),
               if (studentsToShow.isNotEmpty)
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 800, maxWidth: 800),
-                  child: Expanded(
-                    child: Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 20.0),
-                      child: CustomScrollView(
-                        slivers: <Widget>[
-                          SliverAppBar(
-                            title: Text(
-                              'Yay! You have ${studentsToShow.length} students with completed forms!',
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                            pinned: true,
+                ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(maxHeight: 800, maxWidth: 800),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 20.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          const SizedBox(
+                            height: 12,
                           ),
-                          SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (BuildContext context, int index) {
-                                return ListTile(
-                                  title: SelectableText(studentsToShow[index]),
-                                );
-                              },
-                              childCount: studentsToShow.length,
+                          Text(
+                            'Yay! You have ${studentsToShow.length} students with completed forms!',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
+                          ),
+                          const SizedBox(
+                            height: 12,
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              // Copy the list of studentsToShow to the clipboard
+                              final textToCopy = studentsToShow.join('\n');
+                              Clipboard.setData(
+                                  ClipboardData(text: textToCopy));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('List copied to clipboard')),
+                              );
+                            },
+                            child: const Text('Copy List'),
+                          ), // Add a divider for separation
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics:
+                                const ClampingScrollPhysics(), // To disable scrolling in the list
+                            itemCount: studentsToShow.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return ListTile(
+                                title: Text(studentsToShow[index]),
+                              );
+                            },
                           ),
                         ],
                       ),

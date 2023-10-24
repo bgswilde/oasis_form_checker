@@ -6,7 +6,6 @@ const endpointUrl =
 
 Future<String> getCloudFunctionValue(String function, String value) async {
   final response = await http.get(Uri.parse(endpointUrl + function));
-  print('this is the response: $response');
   final jsonResponse = json.decode(response.body);
   final returnValue = jsonResponse[value];
   return returnValue;

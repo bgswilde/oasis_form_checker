@@ -56,7 +56,7 @@ class CodePageState extends State<CodePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Image.asset('assets/oasisL.png', height: 100),
+        title: Image.asset('assets/oasisL.png', height: 75),
         centerTitle: true,
       ),
       body: Center(
