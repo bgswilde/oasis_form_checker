@@ -2,14 +2,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterfire_ui/auth.dart';
+import 'package:googleapis/firestore/v1.dart';
 import 'package:oasis_forms_checker/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:oasis_forms_checker/screens/code_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oasis_forms_checker/screens/search_screen.dart';
+import 'package:oasis_forms_checker/services/cloud_func_getters.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({Key? key}) : super(key: key);
+
+  @override
+  _AuthGateState createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  String client = '';
+
+  @override
+  void initState() {
+    super.initState();
+    getCloudFunctionValue('getGoogleClient', 'gClient').then((value) {
+      setState(() {
+        client = value;
+      });
+    });
+  }
 
   Future<Widget> checkVerificationAndRedirect(String uid) async {
     DocumentSnapshot userDoc =
@@ -52,12 +70,12 @@ class AuthGate extends StatelessWidget {
     }
   }
 
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {    
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        String? client = dotenv.env['GOOGLE_CLIENT'];
         final user = snapshot.data;
         // User is not signed in
         if (user == null) {
@@ -121,7 +139,6 @@ class AuthGate extends StatelessWidget {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await dotenv.load();
   runApp(const MyApp());
 }
 
