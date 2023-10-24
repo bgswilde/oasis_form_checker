@@ -68,9 +68,9 @@ class SearchPageState extends State<SearchPage> {
     toggleLoading();
 
     // Firebase Functions for env variables
-    final jsonKey = await getCloudFunctionValue('getJsonKeyE', 'jsonKey');
-    final sheet = await getCloudFunctionValue('getGoogleSheetE', 'gSheet');
-    final String range = await getCloudFunctionValue('getRangeRequestE', 'range');
+    final jsonKey = await getCloudFunctionValue('getJsonKey', 'jsonKey');
+    final sheet = await getCloudFunctionValue('getGoogleSheet', 'gSheet');
+    final String range = await getCloudFunctionValue('getRangeRequest', 'range');
     
     // google sheets api requirements
     final credentials = ServiceAccountCredentials.fromJson(jsonKey);
